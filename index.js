@@ -1,40 +1,31 @@
 const setCell = function(cellAddress, valueToSet) {
+  // TO DO: cell already defined?
   data[cellAddress] = valueToSet;
 }
 
 const getValue = function(cellAddress) {
+
+
+  // if cellAddress is an address
   if (data[cellAddress]) {
+    console.log(`data[cellAddress] = ${data[cellAddress]}`)
+    let storedValue = data[cellAddress].toString();
 
-    // could name rawvalue, valuefromstorage, storedvalue
-    // best to rename to "value" (it's a map w keys & actually *values*)
-    let calculatedValue = data[cellAddress];
-    if (calculatedValue[0] === '=') {
-      // remove equals
-      // could call this "equation"
-      calculatedValue = calculatedValue.slice(1, calculatedValue.length);
-
-      // wrap in data[_]
-      // feedback: don't use getValue in the string -- if needed to change name then might forget needs to be changed here as well
-      // rename stringToEval or expandedExpressionToEval ("eval" instead of "evaluate" to show it's specifically the JS "eval" function)
-      calculatedValue = calculatedValue.split('+').map(x => `getValue('${x}')`).join('+');
-
+    if (storedValue.charAt(0) === '=') {
+      let equation = storedValue.slice(1, storedValue.length);
+      let numsToadd = equation.split('+');
+      let calculatedEquation = numsToadd.reduce((total, val) =>
+         Number(total) + (getValue(val) || 0)
+      , 0);
+      return calculatedEquation;
+    } else {
+      return Number(storedValue);
     }
-
-    return eval(calculatedValue);
+  } else {
+    // cellAddress is a number
+    return Number(cellAddress);
   }
 }
-
-// could be improved
-const doThing = function(shouldDo) {
-  let a = 3;
-  if (shouldDo) {
-    a = 5;
-  }
-
-  let b = a + a;
-  let c = b + a;
-  return c;
-
 
 // possibly better
 const doThing = function(shouldDo) {
@@ -45,7 +36,7 @@ const doThing = function(shouldDo) {
   }
 }
 
-const doThingWithA(a) {
+const doThingWithA = function(a) {
   let b = a + a;
   let c = b + a;
   return c;
@@ -56,31 +47,39 @@ let data = {};
 
 // test setting
 setCell('A1', 1);
-console.log(`SETCELL: expect ${data['A1']} to equal 1`);
-
+console.log(`----SETCELL: expect ${getValue('A1')} to equal 1`);
 //test getting
-console.log(`GETCELL: expect ${getValue('A1')} to equal 1`);
+console.log(`----GETCELL: expect ${getValue('A1')} to equal 1`);
+
 
 // test setting calculated value
 setCell('B1', 34);
+console.log(`----SETCELL: expect ${getValue('B1')} to equal 34`);
+
 setCell('C2', '=A1+B1');
-console.log(`SETCELL: expect ${data['C2']} to equal =A1+B1`);
+console.log(`----SETCELL: expect ${getValue('C2')} to equal =A1+B1`);
 
 // test getting calculated value
-console.log(`GETCELL: expect ${getValue('C2')} to equal 35`);
+console.log(`----GETCELL: expect ${getValue('C2')} to equal 35`);
+
+
 
 // test changing value referenced in equation
 setCell('B1', 10);
-console.log(`SETCELL: expect ${data['B1']} to equal 10`);
+console.log(`----SETCELL: expect ${getValue('B1')} to equal 10`);
+
 
 // test getting value of cell with equation (after change)
-console.log(`GETCELL: expect ${getValue('C2')} to equal 11`);
+console.log(`----GETCELL: expect ${getValue('C2')} to equal 11`);
+
 
 // set C3 to C2+B1
 setCell('C3', '=C2+B1');
-console.log(`SETCELL: expect ${data['C3']} to equal =C2+B1`);
+console.log(`----SETCELL: expect ${data['C3']} to equal =C2+B1`);
 
 // test getting
-console.log(`GETCELL: expect ${getValue('C3')} to equal 21`);
+console.log(`----GETCELL: expect ${getValue('C3')} to equal 21`);
 
-// console.log(data);
+setCell('C4', '=C3+100');
+console.log(`----SETCELL: expect ${data['C4']} to equal =C3+100`);
+console.log(`----GETCELL: expect ${getValue('C4')} to equal 121`);
