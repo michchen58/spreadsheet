@@ -1,85 +1,59 @@
+let data = {};
+
 const setCell = function(cellAddress, valueToSet) {
-  // TO DO: cell already defined?
   data[cellAddress] = valueToSet;
 }
 
-const getValue = function(cellAddress) {
+const getValue = function(cellContents) {
+  let storedValue = data[cellContents];
 
-
-  // if cellAddress is an address
-  if (data[cellAddress]) {
-    console.log(`data[cellAddress] = ${data[cellAddress]}`)
-    let storedValue = data[cellAddress].toString();
-
-    if (storedValue.charAt(0) === '=') {
-      let equation = storedValue.slice(1, storedValue.length);
-      let numsToadd = equation.split('+');
-      let calculatedEquation = numsToadd.reduce((total, val) =>
-         Number(total) + (getValue(val) || 0)
-      , 0);
-      return calculatedEquation;
-    } else {
+  let isEquation = storedValue
+                 ? storedValue.toString().charAt(0) === '='
+                 : false;
+  if (isEquation) {
+    let equation = storedValue.slice(1, storedValue.length);
+    let valuesToSum = equation.split('+');
+    let sum = valuesToSum.reduce(
+      (tot, val) => (tot + getValue(val)),
+      0
+    );
+    return sum;
+  } else {
+    if (cellContents.match(/[a-z]{1,}\d{1,}/i)) {
       return Number(storedValue);
+    } else {
+      return Number(cellContents);
     }
-  } else {
-    // cellAddress is a number
-    return Number(cellAddress);
   }
 }
 
-// possibly better
-const doThing = function(shouldDo) {
-  if (shouldDo) {
-    return doThingWithA(5)
-  } else {
-    return doThingWithA(3)
-  }
-}
 
-const doThingWithA = function(a) {
-  let b = a + a;
-  let c = b + a;
-  return c;
-}
-
-
-let data = {};
-
-// test setting
+console.log('--- test simple get/set ---');
 setCell('A1', 1);
-console.log(`----SETCELL: expect ${getValue('A1')} to equal 1`);
-//test getting
-console.log(`----GETCELL: expect ${getValue('A1')} to equal 1`);
+console.log(`setCell: expect ${data['A1']} to equal 1`);
+console.log(`getCell: expect ${getValue('A1')} to equal 1`);
 
 
-// test setting calculated value
+console.log('\n--- test calculated values ---');
 setCell('B1', 34);
-console.log(`----SETCELL: expect ${getValue('B1')} to equal 34`);
-
+console.log(`setCell: expect ${data['B1']} to equal 34`);
 setCell('C2', '=A1+B1');
-console.log(`----SETCELL: expect ${getValue('C2')} to equal =A1+B1`);
-
-// test getting calculated value
-console.log(`----GETCELL: expect ${getValue('C2')} to equal 35`);
+console.log(`setCell: expect ${data['C2']} to equal =A1+B1`);
+console.log(`getCell: expect ${getValue('C2')} to equal 35`);
 
 
-
-// test changing value referenced in equation
+console.log('\n--- test changing value referenced in equation ---');
 setCell('B1', 10);
-console.log(`----SETCELL: expect ${getValue('B1')} to equal 10`);
+console.log(`setCell: expect ${data['B1']} to equal 10`);
+console.log(`getCell: expect ${getValue('C2')} to equal 11`);
 
-
-// test getting value of cell with equation (after change)
-console.log(`----GETCELL: expect ${getValue('C2')} to equal 11`);
-
-
-// set C3 to C2+B1
+console.log('\n--- test calculated values >1 reference deep ---');
 setCell('C3', '=C2+B1');
-console.log(`----SETCELL: expect ${data['C3']} to equal =C2+B1`);
+console.log(`setCell: expect ${data['C3']} to equal =C2+B1`);
+console.log(`getCell: expect ${getValue('C3')} to equal 21`);
 
-// test getting
-console.log(`----GETCELL: expect ${getValue('C3')} to equal 21`);
 
+console.log('\n--- test equation including both references and numbers ---');
 setCell('C4', '=C3+100');
-console.log(`----SETCELL: expect ${data['C4']} to equal =C3+100`);
-console.log(`----GETCELL: expect ${getValue('C4')} to equal 121`);
+console.log(`setCell: expect ${data['C4']} to equal =C3+100`);
+console.log(`getCell: expect ${getValue('C4')} to equal 121`);
